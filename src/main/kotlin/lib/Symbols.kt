@@ -8,6 +8,13 @@ data class Terminal(val identifier: String) : Symbol() {
     override fun toString() = identifier
 }
 
+val Symbol.isTerminal get() = this is Terminal
+
+
+typealias Nonterminal = Symbol
+
+val Symbol.isNonterminal get() = this !is Terminal
+
 
 object Dot : Symbol() {
     override fun toString() = "."
