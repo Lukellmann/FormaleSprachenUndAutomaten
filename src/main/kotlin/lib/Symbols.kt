@@ -16,7 +16,10 @@ private data class TerminalWrapper(private val wrapped: String) : Terminal {
     override fun symEq(other: Any?) = (other is TerminalWrapper && this.wrapped == other.wrapped) || wrapped == other
 }
 
-fun String.asTerminal(): Terminal = TerminalWrapper(this)
+fun String.asTerminal(): Terminal {
+    require(isNotEmpty()) { "Terminal can not be empty" }
+    return TerminalWrapper(this)
+}
 
 
 sealed interface Nonterminal : Symbol
@@ -30,7 +33,10 @@ private data class NonterminalWrapper(private val wrapped: Any?) : Nonterminal {
 fun Any?.asNonterminal() = when (this) {
     is Nonterminal -> this
     is Terminal -> throw IllegalArgumentException("Terminal can not be converted to nonterminal")
-    else -> NonterminalWrapper(this)
+    else -> {
+        if (this is CharSequence) require(isNotEmpty()) { "Nonterminal can not be empty" }
+        NonterminalWrapper(this)
+    }
 }
 
 
