@@ -19,7 +19,7 @@ open class ContextSensitiveProduction : UnrestrictedProduction {
     protected constructor(left: Word, right: Word, skipChecks: Boolean) : super(left, right) {
         if (skipChecks) return
 
-        require(left.any { it.isNonterminal }) {
+        require(left.any { it is Nonterminal }) {
             "Left-hand side of context-sensitive production $this has no nonterminal symbol"
         } // -> left.size >= 1
 
@@ -34,7 +34,7 @@ open class ContextSensitiveProduction : UnrestrictedProduction {
 
             val sizeDiff = right.size - left.size // always >= 0
             val indicesOfNonterminals =
-                left.mapIndexedNotNull { index, symbol -> index.takeIf { symbol.isNonterminal } }
+                left.mapIndexedNotNull { index, symbol -> index.takeIf { symbol is Nonterminal } }
 
             require(indicesOfNonterminals.any { index ->
                 val samePrefix = left.subList(0, index) == right.subList(0, index)
@@ -56,26 +56,20 @@ open class ContextFreeProduction(
         vararg rightSymbols: Symbol,
     ) : this(nonterminalLeft, wordOf(*rightSymbols))
 
-    init {
-        require(nonterminalLeft.isNonterminal) {
-            "Left-hand side of context-free production $this is no nonterminal symbol"
-        }
-    }
-
-    val nonterminalLeft: Nonterminal get() = left.first()
+    val nonterminalLeft get() = left.first() as Nonterminal
 
     val singleTerminalRightOrNull get() = if (right.size == 1) right.first() as? Terminal else null
 
-    val nonterminalPairRightOrNull: Pair<Nonterminal, Nonterminal>?
+    val nonterminalPairRightOrNull
         get() = if (right.size == 2) {
             val (first, second) = right
-            if (first.isNonterminal && second.isNonterminal) Pair(first, second) else null
+            if (first is Nonterminal && second is Nonterminal) Pair(first, second) else null
         } else null
 
     val isInChomskyNormalForm
         get() = when (right.size) {
-            1 -> right.first().isTerminal
-            2 -> right.all { it.isNonterminal }
+            1 -> right.first() is Terminal
+            2 -> right.all { it is Nonterminal }
             else -> false
         }
 }
@@ -83,36 +77,16 @@ open class ContextFreeProduction(
 
 class RegularProduction : ContextFreeProduction {
 
-    constructor(nonterminalLeft: Nonterminal) : super(nonterminalLeft.check())
+    constructor(nonterminalLeft: Nonterminal) : super(nonterminalLeft)
 
-    constructor(nonterminalLeft: Nonterminal, terminalRight: Terminal) : super(
-        nonterminalLeft.check(terminalRight),
-        terminalRight,
-    )
+    constructor(nonterminalLeft: Nonterminal, terminalRight: Terminal) : super(nonterminalLeft, terminalRight)
 
-    constructor(nonterminalLeft: Nonterminal, terminalRight: Terminal, nonterminalRight: Nonterminal) : super(
-        nonterminalLeft.check(terminalRight, nonterminalRight),
-        terminalRight,
-        nonterminalRight.also {
-            require(it.isNonterminal) {
-                "Right-hand side of regular production ${
-                    UnrestrictedProduction(wordOf(nonterminalLeft), wordOf(terminalRight, nonterminalRight))
-                } has terminal symbol where nonterminal symbol was expected"
-            }
-        },
-    )
-
-    private companion object {
-        private fun Nonterminal.check(vararg right: Symbol): Nonterminal {
-            require(isNonterminal) {
-                "Left-hand side of regular production ${
-                    UnrestrictedProduction(wordOf(this), wordOf(*right))
-                } is no nonterminal symbol"
-            }
-            return this
-        }
-    }
+    constructor(
+        nonterminalLeft: Nonterminal,
+        terminalRight: Terminal,
+        nonterminalRight: Nonterminal,
+    ) : super(nonterminalLeft, terminalRight, nonterminalRight)
 
     val terminalRightOrNull get() = right.firstOrNull() as Terminal?
-    val nonTerminalRightOrNull: Nonterminal? get() = right.getOrNull(1)
+    val nonTerminalRightOrNull get() = right.getOrNull(1) as Nonterminal?
 }

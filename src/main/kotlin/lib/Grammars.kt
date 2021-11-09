@@ -20,10 +20,6 @@ data class Grammar<out P : UnrestrictedProduction>(
     val isUnrestricted get() = true
 
     init {
-        require(nonterminalAlphabet.none { it in terminalAlphabet }) {
-            "\nTerminal and nonterminal alphabet of grammar\n$this\noverlap"
-        }
-
         require(startSymbol in nonterminalAlphabet) {
             "\nStart symbol $startSymbol is no element of the nonterminal alphabet ${nonterminalAlphabet.setToString()} of grammar\n$this"
         }
