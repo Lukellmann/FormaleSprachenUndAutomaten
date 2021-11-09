@@ -72,6 +72,8 @@ open class ContextFreeProduction(
             2 -> right.all { it is Nonterminal }
             else -> false
         }
+
+    val isLR0Item get() = right.count { it symEq Dot } == 1
 }
 
 

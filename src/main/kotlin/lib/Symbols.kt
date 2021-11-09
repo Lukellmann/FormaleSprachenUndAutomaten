@@ -70,3 +70,6 @@ fun <S : Symbol> wordOf(vararg symbols: S) = listOf(*symbols)
 fun <S : Symbol> emptyWord() = emptyList<S>()
 val Word.isEpsilon get() = isEmpty()
 fun Word.wordToString() = if (isEpsilon) "ε" else joinToString(separator = "")
+fun <S : Symbol> List<S>.subWord(fromIndex: Int, toIndex: Int) = subList(fromIndex, toIndex)
+operator fun <S : Symbol> S.plus(symbol: S) = wordOf(this, symbol)
+operator fun <S : Symbol> S.plus(word: List<S>) = wordOf(this) + word

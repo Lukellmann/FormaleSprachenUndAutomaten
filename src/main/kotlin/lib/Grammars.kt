@@ -20,6 +20,8 @@ data class Grammar<out P : UnrestrictedProduction>(
     val isUnrestricted get() = true
 
     init {
+        require(Dot !in nonterminalAlphabet) { "Dot is not allowed in nonterminal alphabet" }
+
         require(startSymbol in nonterminalAlphabet) {
             "\nStart symbol $startSymbol is no element of the nonterminal alphabet ${nonterminalAlphabet.setToString()} of grammar\n$this"
         }
