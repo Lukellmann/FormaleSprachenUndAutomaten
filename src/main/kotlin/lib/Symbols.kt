@@ -8,6 +8,14 @@ sealed interface Symbol {
 infix fun Any?.symEq(symbol: Symbol) = symbol symEq this
 
 
+sealed class SingletonSymbol(private val symbol: String) : Symbol {
+    final override fun symEq(other: Any?) = this === other
+    final override fun equals(other: Any?) = super.equals(other)
+    final override fun hashCode(): Int = super.hashCode()
+    final override fun toString() = symbol
+}
+
+
 sealed interface Terminal : Symbol
 
 
@@ -20,6 +28,12 @@ fun String.asTerminal(): Terminal {
     require(isNotEmpty()) { "Terminal can not be empty" }
     return TerminalWrapper(this)
 }
+
+
+sealed class SingletonTerminal(symbol: String) : SingletonSymbol(symbol), Terminal
+
+
+object EOF : SingletonTerminal("$")
 
 
 sealed interface Nonterminal : Symbol
@@ -40,10 +54,10 @@ fun Any?.asNonterminal() = when (this) {
 }
 
 
-object Dot : Nonterminal {
-    override fun toString() = "."
-    override fun symEq(other: Any?) = this === other
-}
+sealed class SingletonNonterminal(symbol: String) : SingletonSymbol(symbol), Nonterminal
+
+
+object Dot : SingletonNonterminal(".")
 
 
 typealias Alphabet = Set<Symbol>
@@ -68,8 +82,12 @@ typealias NonterminalWord = List<Nonterminal>
 
 fun <S : Symbol> wordOf(vararg symbols: S) = listOf(*symbols)
 fun <S : Symbol> emptyWord() = emptyList<S>()
+
 val Word.isEpsilon get() = isEmpty()
+infix fun <S : Symbol> List<S>.endsWith(symbol: S) = lastOrNull() == symbol
+
 fun Word.wordToString() = if (isEpsilon) "ε" else joinToString(separator = "")
+
 fun <S : Symbol> List<S>.subWord(fromIndex: Int, toIndex: Int) = subList(fromIndex, toIndex)
 operator fun <S : Symbol> S.plus(symbol: S) = wordOf(this, symbol)
 operator fun <S : Symbol> S.plus(word: List<S>) = wordOf(this) + word

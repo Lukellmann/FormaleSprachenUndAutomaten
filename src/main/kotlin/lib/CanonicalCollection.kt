@@ -39,15 +39,15 @@ fun ContextFreeGrammar.canonicalCollectionAndNewStartSymbol(): CanonicalCollecti
 
     val allSymbols = nonterminalAlphabet + terminalAlphabet
 
-    val newStartSymbol = generateSequence("S'") { "$it'" }
-        .first { sPrime -> nonterminalAlphabet.none { it symEq sPrime } }
+    val newStartSymbol = generateSequence("$startSymbol'") { "$it'" }
+        .first { startSymbolPrime -> nonterminalAlphabet.none { it symEq startSymbolPrime } }
         .asNonterminal()
 
-    val newStartProduction = ContextFreeProduction(newStartSymbol, right = Dot + startSymbol)
+    val sPrimeToDotS = ContextFreeProduction(newStartSymbol, right = Dot + startSymbol)
 
     return CanonicalCollectionAndNewStartSymbol(
         canonicalCollection = transitiveClosure(
-            seed = setOf(closure(setOf(newStartProduction))),
+            seed = setOf(closure(setOf(sPrimeToDotS))),
             step = { i -> allSymbols.mapNotNull { x -> jump(i, x).takeIf { it.isNotEmpty() } } },
         ),
         newStartSymbol = newStartSymbol,

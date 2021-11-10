@@ -56,9 +56,9 @@ open class ContextFreeProduction(
         vararg rightSymbols: Symbol,
     ) : this(nonterminalLeft, wordOf(*rightSymbols))
 
-    val nonterminalLeft get() = left.first() as Nonterminal
+    val nonterminalLeft get() = left.single() as Nonterminal
 
-    val singleTerminalRightOrNull get() = if (right.size == 1) right.first() as? Terminal else null
+    val singleTerminalRightOrNull get() = right.singleOrNull() as? Terminal
 
     val nonterminalPairRightOrNull
         get() = if (right.size == 2) {
@@ -68,7 +68,7 @@ open class ContextFreeProduction(
 
     val isInChomskyNormalForm
         get() = when (right.size) {
-            1 -> right.first() is Terminal
+            1 -> right.single() is Terminal
             2 -> right.all { it is Nonterminal }
             else -> false
         }
