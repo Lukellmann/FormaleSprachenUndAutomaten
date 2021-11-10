@@ -73,7 +73,7 @@ open class ContextFreeProduction(
             else -> false
         }
 
-    val isLR0Item get() = right.count { it symEq Dot } == 1
+    val isLR0Item get() = right.count { it == Dot } == 1
 }
 
 
