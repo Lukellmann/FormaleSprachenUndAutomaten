@@ -64,11 +64,3 @@ fun ContextFreeGrammar.lr0Parse(word: TerminalWord): LR0ParserResult {
         }
     }
 }
-
-
-private class Stack<T> {
-    private val stack = ArrayDeque<T>()
-    val top get() = stack.firstOrNull()
-    fun push(element: T) = stack.addFirst(element)
-    fun pop() = stack.removeFirstOrNull()
-}

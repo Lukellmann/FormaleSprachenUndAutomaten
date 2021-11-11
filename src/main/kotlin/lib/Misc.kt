@@ -6,6 +6,7 @@ import kotlin.math.max
 import kotlin.properties.ReadOnlyProperty
 import kotlin.reflect.KProperty
 
+
 fun Set<*>.setToString() = joinToString(separator = ", ", prefix = "{", postfix = "}")
 
 
