@@ -14,8 +14,8 @@ private fun ContextFreeGrammar.closure(seed: Set<ContextFreeProduction>) = trans
 )
 
 
-fun ContextFreeGrammar.jump(start: Set<ContextFreeProduction>, symbol: Symbol) = closure(
-    start.apply { require(all { it.isLR0Item }) { "jump only takes LR(0) items" } }
+private fun ContextFreeGrammar.goTo(start: Set<ContextFreeProduction>, symbol: Symbol) =
+    start.apply { require(all { it.isLR0Item }) { "goTo only takes LR(0) items" } }
         .mapNotNull { production ->
             val right = production.right
             val indexOfDot = right.indexOf(Dot)
@@ -27,17 +27,27 @@ fun ContextFreeGrammar.jump(start: Set<ContextFreeProduction>, symbol: Symbol) =
             ) else null
         }
         .toSet()
-)
+        .takeIf { it.isNotEmpty() }
+        ?.let { closure(it) }
 
 
-data class CanonicalCollectionAndNewStartSymbol(
-    val canonicalCollection: Set<Set<ContextFreeProduction>>,
-    val newStartSymbol: Nonterminal,
-)
+val ContextFreeGrammar.goToTable by LazyExtensionProperty {
+    FunctionTable(
+        domainX = canonicalCollection,
+        domainY = (nonterminalAlphabet union terminalAlphabet),
+        function = ::goTo,
+        name = "GoTo",
+        xToString = Set<*>::setToString,
+        zToString = { it?.setToString() ?: "⊥" },
+    )
+}
 
-fun ContextFreeGrammar.canonicalCollectionAndNewStartSymbol(): CanonicalCollectionAndNewStartSymbol {
 
-    val allSymbols = nonterminalAlphabet + terminalAlphabet
+typealias CanonicalCollection = Set<Set<ContextFreeProduction>>
+
+private fun ContextFreeGrammar.canonicalCollectionAndNewStartSymbol(): Pair<CanonicalCollection, Nonterminal> {
+
+    val allSymbols = nonterminalAlphabet union terminalAlphabet
 
     val newStartSymbol = generateSequence("$startSymbol'") { "$it'" }
         .first { startSymbolPrime -> nonterminalAlphabet.none { it symEq startSymbolPrime } }
@@ -45,13 +55,19 @@ fun ContextFreeGrammar.canonicalCollectionAndNewStartSymbol(): CanonicalCollecti
 
     val sPrimeToDotS = ContextFreeProduction(newStartSymbol, right = Dot + startSymbol)
 
-    return CanonicalCollectionAndNewStartSymbol(
-        canonicalCollection = transitiveClosure(
+    return Pair(
+        first = transitiveClosure(
             seed = setOf(closure(setOf(sPrimeToDotS))),
-            step = { i -> allSymbols.mapNotNull { x -> jump(i, x).takeIf { it.isNotEmpty() } } },
+            step = { i -> allSymbols.mapNotNull { x -> goTo(i, x) } },
         ),
-        newStartSymbol = newStartSymbol,
+        second = newStartSymbol,
     )
 }
 
-fun ContextFreeGrammar.canonicalCollection() = canonicalCollectionAndNewStartSymbol().canonicalCollection
+
+private val ContextFreeGrammar.canonicalCollectionAndNewStartSymbol
+        by LazyExtensionProperty { canonicalCollectionAndNewStartSymbol() }
+
+val ContextFreeGrammar.canonicalCollection get() = canonicalCollectionAndNewStartSymbol.first
+
+val ContextFreeGrammar.extendedStartSymbol get() = canonicalCollectionAndNewStartSymbol.second

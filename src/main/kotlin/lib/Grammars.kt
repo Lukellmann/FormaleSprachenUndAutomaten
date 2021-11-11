@@ -27,7 +27,7 @@ data class Grammar<out P : UnrestrictedProduction>(
             "\nStart symbol $startSymbol is no element of the nonterminal alphabet ${nonterminalAlphabet.setToString()} of grammar\n$this"
         }
 
-        val symbols = nonterminalAlphabet + terminalAlphabet
+        val symbols = nonterminalAlphabet union terminalAlphabet
         require(productions.all { symbols.containsAll(it.left) && symbols.containsAll(it.right) }) {
             "\nA production of grammar\n$this\nuses a symbol that is no element of the terminal or nonterminal alphabet"
         }
