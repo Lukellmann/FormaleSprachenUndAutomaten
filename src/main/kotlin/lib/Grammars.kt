@@ -70,4 +70,4 @@ typealias ContextSensitiveGrammar = Grammar<ContextSensitiveProduction>
 typealias ContextFreeGrammar = Grammar<ContextFreeProduction>
 typealias RegularGrammar = Grammar<RegularProduction>
 
-val ContextFreeGrammar.isInChomskyNormalForm get() = productions.all { it.isInChomskyNormalForm }
+val ContextFreeGrammar.isInChomskyNormalForm by LazyExtensionProperty { productions.all { it.isInChomskyNormalForm } }

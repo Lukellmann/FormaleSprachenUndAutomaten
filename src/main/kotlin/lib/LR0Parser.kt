@@ -64,3 +64,14 @@ fun ContextFreeGrammar.lr0Parse(word: TerminalWord): LR0ParserResult {
         }
     }
 }
+
+
+val ContextFreeGrammar.isLR0Parsable by LazyExtensionProperty {
+    canonicalCollection.all { element ->
+        when (element.size) {
+            0 -> error("Canonical collection contains empty element")
+            1 -> true
+            else -> element.none { it.right endsWith Dot }
+        }
+    }
+}

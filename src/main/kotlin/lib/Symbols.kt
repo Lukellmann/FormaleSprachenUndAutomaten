@@ -67,12 +67,9 @@ typealias NonterminalAlphabet = Set<Nonterminal>
 fun <S : Symbol> alphabetOf(vararg symbols: S) = setOf(*symbols)
 fun <S : Symbol> emptyAlphabet() = emptySet<S>()
 fun TerminalAlphabet.word(vararg symbols: String): TerminalWord = symbols.map { symbol ->
-    firstOrNull { it symEq symbol }
-        ?: throw IllegalArgumentException("Terminal alphabet ${
-            this.setToString()
-        } does not contain all symbols ${
-            symbols.toSet().setToString()
-        }")
+    requireNotNull(firstOrNull { it symEq symbol }) {
+        "Terminal alphabet ${this.setToString()} does not contain all symbols ${symbols.toSet().setToString()}"
+    }
 }
 
 

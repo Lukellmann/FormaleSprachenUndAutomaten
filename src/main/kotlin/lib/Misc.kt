@@ -1,7 +1,6 @@
 package lib
 
-import java.util.*
-import kotlin.collections.ArrayDeque
+import java.util.concurrent.ConcurrentHashMap
 import kotlin.math.max
 import kotlin.properties.ReadOnlyProperty
 import kotlin.reflect.KProperty
@@ -44,9 +43,9 @@ class Stack<T> {
 
 
 class LazyExtensionProperty<in T, out V : Any>(private val initializer: T.() -> V) : ReadOnlyProperty<T, V> {
-    private val propertyValues = IdentityHashMap<T, V>()
-    override operator fun getValue(thisRef: T, property: KProperty<*>): V =
-        propertyValues[thisRef] ?: synchronized(propertyValues) { propertyValues.computeIfAbsent(thisRef, initializer) }
+    private val propertyValues = ConcurrentHashMap<T, V>()
+    override operator fun getValue(thisRef: T, property: KProperty<*>) =
+        propertyValues.computeIfAbsent(thisRef, initializer)
 }
 
 

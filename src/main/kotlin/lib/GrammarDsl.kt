@@ -16,15 +16,13 @@ sealed class ProductionsBuildScope<P : UnrestrictedProduction> private construct
     protected val productions = mutableSetOf<P>()
     internal fun build(): Set<P> = productions
 
-    protected fun getNonterminal(symbol: String) =
-        nonterminalAlphabet.firstOrNull { it symEq symbol } ?: throw IllegalArgumentException(
-            "Nonterminal alphabet ${nonterminalAlphabet.setToString()} does not contain symbol $symbol"
-        )
+    protected fun getNonterminal(symbol: String) = requireNotNull(nonterminalAlphabet.firstOrNull { it symEq symbol }) {
+        "Nonterminal alphabet ${nonterminalAlphabet.setToString()} does not contain symbol $symbol"
+    }
 
-    protected fun getTerminal(symbol: String) =
-        terminalAlphabet.firstOrNull { it symEq symbol } ?: throw IllegalArgumentException(
-            "Terminal alphabet ${terminalAlphabet.setToString()} does not contain symbol $symbol"
-        )
+    protected fun getTerminal(symbol: String) = requireNotNull(terminalAlphabet.firstOrNull { it symEq symbol }) {
+        "Terminal alphabet ${terminalAlphabet.setToString()} does not contain symbol $symbol"
+    }
 
     protected fun getSymbol(symbol: String): Symbol {
         val nonterminal = nonterminalAlphabet.firstOrNull { it symEq symbol }
@@ -61,7 +59,7 @@ class UnrestrictedProductionsBuildScope internal constructor(
     fun left(vararg leftSymbols: String) = Left(leftSymbols)
 
     fun Left.toRight(vararg rightSymbols: String) {
-        productions.add(UnrestrictedProduction(leftSymbols.map(::getSymbol), rightSymbols.map(::getSymbol)))
+        productions += UnrestrictedProduction(leftSymbols.map(::getSymbol), rightSymbols.map(::getSymbol))
     }
 }
 
@@ -77,7 +75,7 @@ class ContextSensitiveProductionsBuildScope internal constructor(
     fun left(vararg leftSymbols: String) = Left(leftSymbols)
 
     fun Left.toRight(vararg rightSymbols: String) {
-        productions.add(ContextSensitiveProduction(leftSymbols.map(::getSymbol), rightSymbols.map(::getSymbol)))
+        productions += ContextSensitiveProduction(leftSymbols.map(::getSymbol), rightSymbols.map(::getSymbol))
     }
 }
 
@@ -89,7 +87,7 @@ class ContextFreeProductionsBuildScope internal constructor(
 ) : ProductionsBuildScope<ContextFreeProduction>(nonterminalAlphabet, terminalAlphabet) {
 
     fun String.toRight(vararg rightSymbols: String) {
-        productions.add(ContextFreeProduction(getNonterminal(this), rightSymbols.map(::getSymbol)))
+        productions += ContextFreeProduction(getNonterminal(this), rightSymbols.map(::getSymbol))
     }
 }
 
@@ -101,19 +99,19 @@ class RegularProductionsBuildScope internal constructor(
 ) : ProductionsBuildScope<RegularProduction>(nonterminalAlphabet, terminalAlphabet) {
 
     fun String.toRight() {
-        productions.add(RegularProduction(getNonterminal(this)))
+        productions += RegularProduction(getNonterminal(this))
     }
 
     fun String.toRight(terminalRight: String) {
-        productions.add(RegularProduction(getNonterminal(this), getTerminal(terminalRight)))
+        productions += RegularProduction(getNonterminal(this), getTerminal(terminalRight))
     }
 
     fun String.toRight(terminalRight: String, nonterminalRight: String) {
-        productions.add(RegularProduction(
+        productions += RegularProduction(
             getNonterminal(this),
             getTerminal(terminalRight),
             getNonterminal(nonterminalRight),
-        ))
+        )
     }
 }
 
@@ -145,9 +143,9 @@ class GrammarBuildScope<P : UnrestrictedProduction, PBS : ProductionsBuildScope<
         val nonterminals = nonterminalAlphabet.map { it.asNonterminal() }.toSet()
         val terminals = terminalAlphabet.map { it.asTerminal() }.toSet()
         val productions = productionsBuildScopeSupplier(nonterminals, terminals).apply(productionsBlock).build()
-        val start = nonterminals.firstOrNull { it symEq startSymbol } ?: throw IllegalArgumentException(
+        val start = requireNotNull(nonterminals.firstOrNull { it symEq startSymbol }) {
             "Nonterminal alphabet ${nonterminals.setToString()} does not contain start symbol $startSymbol"
-        )
+        }
 
         return Grammar(nonterminals, terminals, productions, start)
     }
