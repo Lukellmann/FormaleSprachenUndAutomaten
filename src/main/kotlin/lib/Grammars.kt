@@ -19,6 +19,8 @@ data class Grammar<out P : UnrestrictedProduction>(
     val isContextSensitive = isContextFree || productions.all { it is ContextSensitiveProduction }
     val isUnrestricted get() = true
 
+    val alphabet: Alphabet = nonterminalAlphabet union terminalAlphabet
+
     init {
         require(Dot !in nonterminalAlphabet) { "Dot is not allowed in nonterminal alphabet" }
         require(EOF !in terminalAlphabet) { "EOF is not allowed in terminal alphabet" }
@@ -27,8 +29,7 @@ data class Grammar<out P : UnrestrictedProduction>(
             "\nStart symbol $startSymbol is no element of the nonterminal alphabet ${nonterminalAlphabet.setToString()} of grammar\n$this"
         }
 
-        val symbols = nonterminalAlphabet union terminalAlphabet
-        require(productions.all { symbols.containsAll(it.left) && symbols.containsAll(it.right) }) {
+        require(productions.all { alphabet.containsAll(it.left) && alphabet.containsAll(it.right) }) {
             "\nA production of grammar\n$this\nuses a symbol that is no element of the terminal or nonterminal alphabet"
         }
 

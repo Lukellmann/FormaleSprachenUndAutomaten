@@ -1,21 +1,28 @@
 package lib
 
 
-private fun ContextFreeGrammar.closure(seed: Set<ContextFreeProduction>) = transitiveClosure(
-    seed = seed.apply { require(all { it.isLR0Item }) { "closure only takes LR(0) items" } },
-    step = { production ->
-        val nonterminalAfterDot = with(production.right) { getOrNull(indexOf(Dot) + 1) as? Nonterminal }
+private fun ContextFreeGrammar.closure(seed: Set<ContextFreeProduction>): Set<ContextFreeProduction> {
+    require(seed.all { it.isLR0Item }) { "closure only takes LR(0) items" }
 
-        if (nonterminalAfterDot != null) productions
-            .filter { it.nonterminalLeft == nonterminalAfterDot }
-            .map { ContextFreeProduction(it.nonterminalLeft, right = Dot + it.right) }
-        else emptySet()
-    },
-)
+    return transitiveClosure(
+        seed = seed,
+        step = { production ->
+            val nonterminalAfterDot = with(production.right) { getOrNull(indexOf(Dot) + 1) as? Nonterminal }
+
+            if (nonterminalAfterDot != null) productions
+                .filter { it.nonterminalLeft == nonterminalAfterDot }
+                .map { ContextFreeProduction(it.nonterminalLeft, right = Dot + it.right) }
+            else emptySet()
+        },
+    )
+}
 
 
-private fun ContextFreeGrammar.goTo(start: Set<ContextFreeProduction>, symbol: Symbol) =
-    start.apply { require(all { it.isLR0Item }) { "goTo only takes LR(0) items" } }
+private fun ContextFreeGrammar.goTo(start: Set<ContextFreeProduction>, symbol: Symbol): Set<ContextFreeProduction>? {
+    require(symbol in alphabet) { "Symbol $symbol is no element of alphabet ${alphabet.setToString()}" }
+    require(start.all { it.isLR0Item }) { "goTo only takes LR(0) items" }
+
+    return start
         .mapNotNull { production ->
             val right = production.right
             val indexOfDot = right.indexOf(Dot)
@@ -29,12 +36,13 @@ private fun ContextFreeGrammar.goTo(start: Set<ContextFreeProduction>, symbol: S
         .toSet()
         .takeIf { it.isNotEmpty() }
         ?.let { closure(it) }
+}
 
 
 val ContextFreeGrammar.goToTable by LazyExtensionProperty {
     FunctionTable(
         domainX = canonicalCollection,
-        domainY = (nonterminalAlphabet union terminalAlphabet),
+        domainY = alphabet,
         function = ::goTo,
         name = "GoTo",
         xToString = Set<*>::setToString,
@@ -47,8 +55,6 @@ typealias CanonicalCollection = Set<Set<ContextFreeProduction>>
 
 private fun ContextFreeGrammar.canonicalCollectionAndNewStartSymbol(): Pair<CanonicalCollection, Nonterminal> {
 
-    val allSymbols = nonterminalAlphabet union terminalAlphabet
-
     val newStartSymbol = generateSequence("$startSymbol'") { "$it'" }
         .first { startSymbolPrime -> nonterminalAlphabet.none { it symEq startSymbolPrime } }
         .asNonterminal()
@@ -58,7 +64,7 @@ private fun ContextFreeGrammar.canonicalCollectionAndNewStartSymbol(): Pair<Cano
     return Pair(
         first = transitiveClosure(
             seed = setOf(closure(setOf(sPrimeToDotS))),
-            step = { i -> allSymbols.mapNotNull { x -> goTo(i, x) } },
+            step = { i -> alphabet.mapNotNull { x -> goTo(i, x) } },
         ),
         second = newStartSymbol,
     )

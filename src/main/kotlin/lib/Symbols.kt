@@ -66,7 +66,7 @@ typealias NonterminalAlphabet = Set<Nonterminal>
 
 fun <S : Symbol> alphabetOf(vararg symbols: S) = setOf(*symbols)
 fun <S : Symbol> emptyAlphabet() = emptySet<S>()
-fun TerminalAlphabet.word(vararg symbols: String): TerminalWord = symbols.map { symbol ->
+fun <S : Symbol> Set<S>.word(vararg symbols: String) = symbols.map { symbol ->
     requireNotNull(firstOrNull { it symEq symbol }) {
         "Terminal alphabet ${this.setToString()} does not contain all symbols ${symbols.toSet().setToString()}"
     }
@@ -82,6 +82,15 @@ fun <S : Symbol> emptyWord() = emptyList<S>()
 
 val Word.isEpsilon get() = isEmpty()
 infix fun <S : Symbol> List<S>.endsWith(symbol: S) = lastOrNull() == symbol
+infix fun <S : Symbol> List<S>.startsWith(symbol: S) = firstOrNull() == symbol
+infix fun <S : Symbol> List<S>.containsSubWord(other: List<S>): Boolean {
+    outer@ for (thisIndex in 0..(this.size - other.size)) {
+        // compare words with offset                                            mismatch -> match at next thisIndex?
+        for (otherIndex in other.indices) if (this[thisIndex + otherIndex] != other[otherIndex]) continue@outer
+        return true // no mismatch -> contains sub-word
+    }
+    return false
+}
 
 fun Word.wordToString() = if (isEpsilon) "ε" else joinToString(separator = "")
 
