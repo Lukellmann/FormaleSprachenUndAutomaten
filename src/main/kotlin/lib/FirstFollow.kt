@@ -31,7 +31,7 @@ fun ContextFreeGrammar.first(word: Word): Set<Terminal>? {
 }
 
 
-fun ContextFreeGrammar.follow(nonterminal: Nonterminal): Set<Terminal>? {
+private fun ContextFreeGrammar.follow(nonterminal: Nonterminal): Set<Terminal>? {
     require(nonterminal in nonterminalAlphabet) {
         "Nonterminal $nonterminal is no element of nonterminal alphabet ${nonterminalAlphabet.setToString()}"
     }
@@ -64,4 +64,14 @@ fun ContextFreeGrammar.follow(nonterminal: Nonterminal): Set<Terminal>? {
 
 
     return uncheckedFollow(nonterminal)
+}
+
+
+val ContextFreeGrammar.followTable by LazyExtensionProperty {
+    Function1Table(
+        domainX = nonterminalAlphabet,
+        function = ::follow,
+        name = "Follow",
+        yToString = { it?.setToString() ?: "⊥" },
+    )
 }

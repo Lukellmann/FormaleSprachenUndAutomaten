@@ -3,11 +3,11 @@
 package lib
 
 
-typealias Action = (d1: Int, i1: Int, j1: Int, k1: Int, matrix: Array<out Array<out Set<Nonterminal>>>, new: Set<Nonterminal>) -> Unit
+typealias CYKAction = (d1: Int, i1: Int, j1: Int, k1: Int, matrix: Array<out Array<out Set<Nonterminal>>>, new: Set<Nonterminal>) -> Unit
 
 fun ContextFreeGrammar.cockeYoungerKasami(
     word: TerminalWord,
-    action: Action = { _, _, _, _, _, _ -> },
+    action: CYKAction = { _, _, _, _, _, _ -> },
 ): Boolean {
     require(terminalAlphabet.containsAll(word)) {
         "Not all symbols of word ${word.wordToString()} are elements of terminal alphabet ${terminalAlphabet.setToString()}"

@@ -40,7 +40,7 @@ private fun ContextFreeGrammar.goTo(start: Set<ContextFreeProduction>, symbol: S
 
 
 val ContextFreeGrammar.goToTable by LazyExtensionProperty {
-    FunctionTable(
+    Function2Table(
         domainX = canonicalCollection,
         domainY = alphabet,
         function = ::goTo,

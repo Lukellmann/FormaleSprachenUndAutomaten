@@ -52,7 +52,56 @@ class LazyExtensionProperty<in T, out V : Any>(private val initializer: T.() -> 
 infix fun <A, B> Set<A>.cross(other: Set<B>) = flatMap { a -> other.map { b -> Pair(a, b) } }.toSet()
 
 
-class FunctionTable<in X, in Y, out Z>(
+class Function1Table<in X, out Y>(
+    private val domainX: Set<X>,
+    private val xToString: (X) -> String = Any?::toString,
+    private val yToString: (Y) -> String = Any?::toString,
+    private val name: String = "",
+    function: (X) -> Y,
+) {
+    private val table = domainX.associateWith { x -> function(x) }
+
+    operator fun get(x: X): Y {
+        require(x in domainX)
+        @Suppress("UNCHECKED_CAST")
+        return table[x] as Y
+    }
+
+    override fun toString(): String {
+        val xs = domainX.toList()
+        if (xs.isEmpty()) return "$name: table empty"
+
+        var xStrings = xs.map(xToString)
+        val maxX = max(name.length, xStrings.maxOf { it.length }).coerceAtLeast(1)
+        xStrings = xStrings.map { it.padEnd(maxX) }
+
+        val yStrings = table
+            .toList()
+            .sortedBy { (x) -> xs.indexOf(x) }
+            .map { (_, y) -> yToString(y) }
+        val maxY = yStrings.maxOf { it.length }.coerceAtLeast(1)
+
+        check(xStrings.size == yStrings.size)
+
+        return buildString {
+            fun appendTableLineSeparator() {
+                appendLine()
+                append("-".repeat(maxX)); append("-+-"); append("-".repeat(maxY))
+                appendLine()
+            }
+
+            append(name.padEnd(maxX)); append(" |")
+            appendTableLineSeparator()
+            for (index in xs.indices) {
+                append(xStrings[index]); append(" | "); append(yStrings[index])
+                if (index != xs.lastIndex) appendTableLineSeparator()
+            }
+        }
+    }
+}
+
+
+class Function2Table<in X, in Y, out Z>(
     private val domainX: Set<X>,
     private val domainY: Set<Y>,
     private val xToString: (X) -> String = Any?::toString,
@@ -63,8 +112,11 @@ class FunctionTable<in X, in Y, out Z>(
 ) {
     private val table = (domainX cross domainY).associateWith { (x, y) -> function(x, y) }
 
-    @Suppress("UNCHECKED_CAST")
-    operator fun get(x: X, y: Y) = table[Pair(x, y)] as Z
+    operator fun get(x: X, y: Y): Z {
+        require(x in domainX && y in domainY)
+        @Suppress("UNCHECKED_CAST")
+        return table[Pair(x, y)] as Z
+    }
 
     override fun toString(): String {
         val xs = domainX.toList()
@@ -107,7 +159,7 @@ class FunctionTable<in X, in Y, out Z>(
                 appendLine()
             }
 
-            append(name); append(" ".repeat(maxX - name.length)); yStrings.forEach { append(" | "); append(it) }
+            append(name.padEnd(maxX)); yStrings.forEach { append(" | "); append(it) }
             appendTableLineSeparator()
             xs.indices.forEach { xIndex ->
                 append(xStrings[xIndex])
