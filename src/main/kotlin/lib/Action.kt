@@ -16,6 +16,10 @@ sealed interface Action {
     object Accept : Action {
         override fun toString() = "accept"
     }
+
+    object Conflict : Action {
+        override fun toString() = "conflict"
+    }
 }
 
 
@@ -30,10 +34,12 @@ private fun ContextFreeGrammar.action(
         "Terminal $terminal is no element of terminal alphabet ${terminalAlphabet.setToString()}"
     }
 
+    var action: Action? = null
+
     val dotAndTerminal = Dot + terminal
 
     if (canonicalCollectionElement.any { it.right containsSubWord dotAndTerminal }) {
-        goToTable[canonicalCollectionElement, terminal]?.let { return Shift(it) }
+        goToTable[canonicalCollectionElement, terminal]?.let { action = Shift(it) }
     }
 
     canonicalCollectionElement
@@ -43,20 +49,24 @@ private fun ContextFreeGrammar.action(
                     && (terminal == EOF || followTable[lr0Item.nonterminalLeft]?.contains(terminal) == true)
         }
         ?.let { lr0Item ->
-            return Reduce(
-                production = productions.first { production ->
-                    production.nonterminalLeft == lr0Item.nonterminalLeft
-                            && production.right == lr0Item.right[0 until lr0Item.right.lastIndex]
-                }
-            )
+            if (action == null) {
+                action = Reduce(
+                    production = productions.first { production ->
+                        production.nonterminalLeft == lr0Item.nonterminalLeft
+                                && production.right == lr0Item.right[0 until lr0Item.right.lastIndex]
+                    }
+                )
+            } else return Conflict
         }
 
     val sAndDot = startSymbol + Dot
 
-    return if (
-        terminal == EOF
-        && canonicalCollectionElement.any { it.nonterminalLeft == extendedStartSymbol && it.right == sAndDot }
-    ) Accept else null
+    return when {
+        terminal == EOF && canonicalCollectionElement.any {
+            it.nonterminalLeft == extendedStartSymbol && it.right == sAndDot
+        } -> if (action == null) Accept else Conflict
+        else -> action
+    }
 }
 
 

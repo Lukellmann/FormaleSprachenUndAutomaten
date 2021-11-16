@@ -1,14 +1,13 @@
 package lib
 
 import lib.Action.*
-import lib.SLRParserResult.Failure.ActionNotDefined
-import lib.SLRParserResult.Failure.WordCannotBeDerived
+import lib.SLRParserResult.Failure.*
 import lib.SLRParserResult.Success
 
 
 sealed interface SLRParserResult {
     class Success(val reversedSteps: List<ContextFreeProduction>) : SLRParserResult
-    enum class Failure : SLRParserResult { WordCannotBeDerived, ActionNotDefined }
+    enum class Failure : SLRParserResult { WordCannotBeDerived, ActionNotDefined, ActionConflict }
 }
 
 
@@ -46,7 +45,13 @@ fun ContextFreeGrammar.slrParse(word: TerminalWord): SLRParserResult {
                 stack.push(goToTable[stackTop, action.production.nonterminalLeft] ?: return WordCannotBeDerived)
                 reversedSteps += action.production
             }
+            is Conflict -> return ActionConflict
             null -> return ActionNotDefined
         }
     }
+}
+
+
+val ContextFreeGrammar.isSLRParsable by LazyExtensionProperty {
+    (canonicalCollection cross terminalAlphabet).none { (cce, t) -> actionTable[cce, t] is Conflict }
 }
