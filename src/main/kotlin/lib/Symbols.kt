@@ -95,5 +95,6 @@ infix fun <S : Symbol> List<S>.containsSubWord(other: List<S>): Boolean {
 fun Word.wordToString() = if (isEpsilon) "ε" else joinToString(separator = "")
 
 fun <S : Symbol> List<S>.subWord(fromIndex: Int, toIndex: Int) = subList(fromIndex, toIndex)
+operator fun <S : Symbol> List<S>.get(range: IntRange) = subWord(range.first, range.last + 1)
 operator fun <S : Symbol> S.plus(symbol: S) = wordOf(this, symbol)
 operator fun <S : Symbol> S.plus(word: List<S>) = wordOf(this) + word
