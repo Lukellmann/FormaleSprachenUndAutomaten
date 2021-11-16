@@ -18,7 +18,7 @@ fun ContextFreeGrammar.lr0Parse(word: TerminalWord): LR0ParserResult {
     val sPrimeToDotS = ContextFreeProduction(extendedStartSymbol, right = Dot + startSymbol)
     val sPrimeToSDot = ContextFreeProduction(extendedStartSymbol, right = startSymbol + Dot)
 
-    val stack = Stack<Set<ContextFreeProduction>>()
+    val stack = Stack<CanonicalCollectionElement>()
     stack.push(canonicalCollection.single { sPrimeToDotS in it })
 
     val wordPlusEOF = word + EOF
@@ -27,10 +27,10 @@ fun ContextFreeGrammar.lr0Parse(word: TerminalWord): LR0ParserResult {
     val reversedSteps = mutableListOf<ContextFreeProduction>()
 
     while (true) {
-        val currentProductions = stack.top ?: error("LR(0)-Parser: stack emtpy")
+        val currentCanonicalCollectionElement = stack.top ?: error("LR(0)-Parser: stack emtpy")
         val currentSymbol = wordPlusEOF[index]
 
-        with(currentProductions) {
+        with(currentCanonicalCollectionElement) {
             when {
                 // earlier iteration reduced to {S' -> S.}
                 equals(setOf(sPrimeToSDot)) -> {
@@ -40,7 +40,9 @@ fun ContextFreeGrammar.lr0Parse(word: TerminalWord): LR0ParserResult {
 
                 // shift
                 none { it.right endsWith Dot } -> {
-                    stack.push(goToTable[currentProductions, currentSymbol] ?: return WordCannotBeDerived)
+                    stack.push(
+                        goToTable[currentCanonicalCollectionElement, currentSymbol] ?: return WordCannotBeDerived
+                    )
                     index++
                 }
 
@@ -52,13 +54,13 @@ fun ContextFreeGrammar.lr0Parse(word: TerminalWord): LR0ParserResult {
 
                 // reduce
                 else -> {
-                    val currentProduction = single()
-                    val beta = currentProduction.right.dropLast(1) // drop Dot
+                    val currentLR0Item = single()
+                    val beta = currentLR0Item.right.dropLast(1) // drop Dot
 
                     repeat(beta.size) { stack.pop() }
                     val stackTop = stack.top ?: error("LR(0)-Parser: stack emtpy")
-                    stack.push(goToTable[stackTop, currentProduction.nonterminalLeft] ?: return WordCannotBeDerived)
-                    reversedSteps += productions.single { it.left == currentProduction.left && it.right == beta }
+                    stack.push(goToTable[stackTop, currentLR0Item.nonterminalLeft] ?: return WordCannotBeDerived)
+                    reversedSteps += productions.single { it.left == currentLR0Item.left && it.right == beta }
                 }
             }
         }

@@ -1,7 +1,7 @@
 package lib
 
 
-private fun ContextFreeGrammar.closure(seed: Set<ContextFreeProduction>): Set<ContextFreeProduction> {
+private fun ContextFreeGrammar.closure(seed: Set<ContextFreeProduction>): CanonicalCollectionElement {
     require(seed.all { it.isLR0Item }) { "closure only takes LR(0) items" }
 
     return transitiveClosure(
@@ -18,7 +18,7 @@ private fun ContextFreeGrammar.closure(seed: Set<ContextFreeProduction>): Set<Co
 }
 
 
-private fun ContextFreeGrammar.goTo(start: Set<ContextFreeProduction>, symbol: Symbol): Set<ContextFreeProduction>? {
+private fun ContextFreeGrammar.goTo(start: CanonicalCollectionElement, symbol: Symbol): CanonicalCollectionElement? {
     require(symbol in alphabet) { "Symbol $symbol is no element of alphabet ${alphabet.setToString()}" }
     require(start.all { it.isLR0Item }) { "goTo only takes LR(0) items" }
 
@@ -51,7 +51,8 @@ val ContextFreeGrammar.goToTable by LazyExtensionProperty {
 }
 
 
-typealias CanonicalCollection = Set<Set<ContextFreeProduction>>
+typealias CanonicalCollection = Set<CanonicalCollectionElement>
+typealias CanonicalCollectionElement = Set<ContextFreeProduction>
 
 private fun ContextFreeGrammar.canonicalCollectionAndNewStartSymbol(): Pair<CanonicalCollection, Nonterminal> {
 

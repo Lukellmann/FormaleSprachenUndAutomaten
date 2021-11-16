@@ -5,7 +5,7 @@ import lib.Action.*
 
 sealed interface Action {
 
-    data class Shift(val canonicalCollectionElement: Set<ContextFreeProduction>) : Action {
+    data class Shift(val canonicalCollectionElement: CanonicalCollectionElement) : Action {
         override fun toString() = "shift ${canonicalCollectionElement.setToString()}"
     }
 
@@ -20,7 +20,7 @@ sealed interface Action {
 
 
 private fun ContextFreeGrammar.action(
-    canonicalCollectionElement: Set<ContextFreeProduction>,
+    canonicalCollectionElement: CanonicalCollectionElement,
     terminal: Terminal,
 ): Action? {
     require(canonicalCollectionElement in canonicalCollection) {
