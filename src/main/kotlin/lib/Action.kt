@@ -50,12 +50,8 @@ private fun ContextFreeGrammar.action(
         }
         ?.let { lr0Item ->
             if (action == null) {
-                action = Reduce(
-                    production = productions.first { production ->
-                        production.nonterminalLeft == lr0Item.nonterminalLeft
-                                && production.right == lr0Item.right[0 until lr0Item.right.lastIndex]
-                    }
-                )
+                val pattern = lr0Item.copyContextFree(right = lr0Item.right.dropLast()) // drop Dot
+                action = Reduce(production = productions.first { it == pattern })
             } else return Conflict
         }
 

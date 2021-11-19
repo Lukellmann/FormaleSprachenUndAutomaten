@@ -6,36 +6,38 @@ private fun ContextFreeGrammar.closure(seed: Set<ContextFreeProduction>): Canoni
 
     return transitiveClosure(
         seed = seed,
-        step = { production ->
-            val nonterminalAfterDot = with(production.right) { getOrNull(indexOf(Dot) + 1) as? Nonterminal }
+        step = { lr0Item ->
+            val nonterminalAfterDot = with(lr0Item.right) { getOrNull(indexOf(Dot) + 1) as? Nonterminal }
 
             if (nonterminalAfterDot != null) productions
                 .filter { it.nonterminalLeft == nonterminalAfterDot }
-                .map { ContextFreeProduction(it.nonterminalLeft, right = Dot + it.right) }
+                .map { it.copyContextFree(right = Dot + it.right) }
             else emptySet()
         },
     )
 }
 
 
-private fun ContextFreeGrammar.goTo(start: CanonicalCollectionElement, symbol: Symbol): CanonicalCollectionElement? {
-    require(symbol in alphabet) { "Symbol $symbol is no element of alphabet ${alphabet.setToString()}" }
-    require(start.all { it.isLR0Item }) { "goTo only takes LR(0) items" }
+private fun ContextFreeGrammar.goTo(
+    fromCanonicalCollectionElement: CanonicalCollectionElement,
+    withSymbol: Symbol,
+): CanonicalCollectionElement? {
+    require(withSymbol in alphabet) { "Symbol $withSymbol is no element of alphabet ${alphabet.setToString()}" }
+    require(fromCanonicalCollectionElement.all { it.isLR0Item }) { "goTo only takes LR(0) items" }
 
-    return start
-        .mapNotNull { production ->
-            val right = production.right
-            val indexOfDot = right.indexOf(Dot)
-            val symbolAfterDot = right.getOrNull(indexOfDot + 1)
+    return fromCanonicalCollectionElement
+        .mapNotNull { lr0Item ->
+            val symbolAfterDot = with(lr0Item.right) { getOrNull(indexOf(Dot) + 1) }
 
-            if (symbolAfterDot == symbol) ContextFreeProduction(
-                nonterminalLeft = production.nonterminalLeft,
-                right = with(right) { subWord(0, indexOfDot) + symbolAfterDot + Dot + subWord(indexOfDot + 2, size) },
+            if (symbolAfterDot == withSymbol) lr0Item.copyContextFree(
+                right = with(lr0Item.right) {
+                    subWordBefore(Dot) + symbolAfterDot + Dot + subWordAfter(Dot).dropFirst()
+                }
             ) else null
         }
         .toSet()
         .takeIf { it.isNotEmpty() }
-        ?.let { closure(it) }
+        ?.let { closure(seed = it) }
 }
 
 
@@ -64,8 +66,12 @@ private fun ContextFreeGrammar.canonicalCollectionAndNewStartSymbol(): Pair<Cano
 
     return Pair(
         first = transitiveClosure(
-            seed = setOf(closure(setOf(sPrimeToDotS))),
-            step = { i -> alphabet.mapNotNull { x -> goTo(i, x) } },
+            seed = setOf(closure(seed = setOf(sPrimeToDotS))),
+            step = { i ->
+                alphabet.mapNotNull { x ->
+                    goTo(fromCanonicalCollectionElement = i, withSymbol = x)
+                }
+            },
         ),
         second = newStartSymbol,
     )

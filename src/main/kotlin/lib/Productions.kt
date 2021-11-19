@@ -3,6 +3,8 @@ package lib
 
 open class UnrestrictedProduction(val left: Word, val right: Word) {
 
+    fun copyUnrestricted(left: Word = this.left, right: Word = this.right) = UnrestrictedProduction(left, right)
+
     final override fun equals(other: Any?) =
         this === other || other is UnrestrictedProduction && this.left == other.left && this.right == other.right
 
@@ -43,6 +45,8 @@ open class ContextSensitiveProduction : UnrestrictedProduction {
             }) { "Context-sensitive production $this does not have form uAv -> uβv" }
         }
     }
+
+    fun copyContextSensitive(left: Word = this.left, right: Word = this.right) = ContextSensitiveProduction(left, right)
 }
 
 
@@ -74,6 +78,9 @@ open class ContextFreeProduction(
         }
 
     val isLR0Item get() = right.singleOrNull { it == Dot } != null
+
+    fun copyContextFree(nonterminalLeft: Nonterminal = this.nonterminalLeft, right: Word = this.right) =
+        ContextFreeProduction(nonterminalLeft, right)
 }
 
 
@@ -90,5 +97,21 @@ class RegularProduction : ContextFreeProduction {
     ) : super(nonterminalLeft, terminalRight, nonterminalRight)
 
     val terminalRightOrNull get() = right.firstOrNull() as Terminal?
-    val nonTerminalRightOrNull get() = right.getOrNull(1) as Nonterminal?
+    val nonterminalRightOrNull get() = right.getOrNull(1) as Nonterminal?
+
+    fun copyRegular(
+        nonterminalLeft: Nonterminal = this.nonterminalLeft,
+        terminalRight: Terminal? = this.terminalRightOrNull,
+        nonterminalRight: Nonterminal? = this.nonterminalRightOrNull,
+    ) = when {
+        nonterminalRight != null -> RegularProduction(
+            nonterminalLeft,
+            requireNotNull(terminalRight) {
+                "A nonterminal on the right-hand side of a regular production cannot exist without a terminal"
+            },
+            nonterminalRight,
+        )
+        terminalRight != null -> RegularProduction(nonterminalLeft, terminalRight)
+        else -> RegularProduction(nonterminalLeft)
+    }
 }

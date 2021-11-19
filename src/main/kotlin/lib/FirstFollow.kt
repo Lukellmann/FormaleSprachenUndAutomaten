@@ -49,7 +49,7 @@ private fun ContextFreeGrammar.follow(nonterminal: Nonterminal): Set<Terminal>? 
             with(production) {
                 for (index in 0 until right.lastIndex) {
                     // nonterminal at any index (except last) -> first(everything after index)
-                    if (right[index] == nonterminal) first(right[(index + 1)..right.lastIndex])?.also(all::add)
+                    if (right[index] == nonterminal) first(right.drop(index + 1))?.also(all::add)
                 }
 
                 if (right endsWith nonterminal) {
