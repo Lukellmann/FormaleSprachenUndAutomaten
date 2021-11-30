@@ -1,5 +1,3 @@
-@file:Suppress("SpellCheckingInspection")
-
 package lib.chomsky01
 
 
