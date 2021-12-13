@@ -9,7 +9,7 @@
     int y[100];                      \
     int z[100];                      \
     int yyx[100];                    \
-    int yyz[100];                    \
+    int yyy[100];                    \
     int yyz[100];                    \
     int i;                           \
     int main(int argc, char *argv[]) \
