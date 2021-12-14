@@ -1,6 +1,6 @@
 #include "WHILE.h"
 #include "pot.h"
-#include "min.h"
+#include "sub.h"
 
 // needs z[7], z[8], y[4]
 #define LOG2             \
@@ -14,7 +14,7 @@
         x[1] = y[4];     \
         x[2] = z[7];     \
         PHLOG2;          \
-    END                  \
+    END;                 \
     x[0] = y[4];
 
 #define PHLOG2   \
@@ -24,4 +24,4 @@
     POT;         \
     x[1] = z[8]; \
     x[2] = x[0]; \
-    MIN;
+    SUB

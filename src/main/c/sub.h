@@ -1,7 +1,7 @@
-#include "min1.h"
+#include "sub1.h"
 
 // needs z[2], z[3], y[2]
-#define MIN                                \
+#define SUB                                \
     /* copy input */                       \
     z[2] = x[1]; z[3] = x[2];              \
                                            \
@@ -15,8 +15,8 @@
         x[2] = y[2] - 1;                   \
         x[3] = x[0];                       \
                                            \
-        /* Ph; h(x1, x2, x3) = min1(x3) */ \
-        x[1] = x[3]; MIN1;                 \
+        /* Ph; h(x1, x2, x3) = sub1(x3) */ \
+        x[1] = x[3]; SUB1;                 \
                                            \
         y[2] = y[2] + 1;                   \
     END

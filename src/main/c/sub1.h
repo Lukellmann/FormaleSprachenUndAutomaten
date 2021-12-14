@@ -1,7 +1,7 @@
 #include "LOOP.h"
 
 // needs z[1], y[1]
-#define MIN1                     \
+#define SUB1                     \
     /* copy input */             \
     z[1] = x[1];                 \
                                  \

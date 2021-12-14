@@ -1,6 +1,6 @@
 #include "WHILE.h"
 #include "mul.h"
-#include "min.h"
+#include "sub.h"
 
 // needs z[5], z[6], y[3]
 #define DIV2             \
@@ -14,7 +14,7 @@
         x[1] = y[3];     \
         x[2] = z[5];     \
         PHDIV2;          \
-    END                  \
+    END;                 \
     x[0] = y[3];
 
 #define PHDIV2   \
@@ -23,4 +23,4 @@
     MUL;         \
     x[1] = z[6]; \
     x[2] = x[0]; \
-    MIN;
+    SUB
